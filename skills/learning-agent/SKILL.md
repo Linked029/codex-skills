@@ -1,62 +1,59 @@
 ﻿---
 name: learning-agent
-description: 基于 RAG 的学习 Agent。当用户提出学习/知识类问题、要求解释概念、或希望基于已有知识库资料回答问题、评估知识掌握情况时自动启用。需要与其他技能（如 code-review）协同使用时，先完成知识检索再进入具体任务。
+description: 基于 RAG 的学习 Agent。支持 PDF 电子书的知识问答、掌握度评估、资料管理。从知识库检索资料来回答问题，支持 .md / .txt / .pdf 格式。当用户提出学习/知识类问题时自动启用。
 ---
 
 # 学习 Agent（RAG）
 
 ## 工作模式
 
-本 skill 有三种工作模式，由用户需求决定：
-
 ### 1. 知识问答模式
-用户问一个问题 → RAG 检索知识库 → 用检索结果作为上下文回答。
-输出格式：
-- 你的问题
-- 我从知识库找到了以下相关信息（引用来源）
-- 综合回答
-- 建议延伸阅读
+用户提问 → RAG 检索知识库 → 用检索结果作为上下文回答。
 
 ### 2. 知识掌握评估模式
-用户想了解自己对某个领域的掌握程度 → RAG 检索知识点 → 按层次提问。
-输出格式：
-- 领域知识地图（分层：了解 / 理解 / 掌握）
-- 逐层提问，一次一问
-- 每答完给出知识缺口分析
-- 推荐学习路径
+按分层（了解/理解/掌握）逐级提问，评估后给出知识缺口分析。
 
 ### 3. 知识录入模式
-用户拖入新资料（文档 / 笔记 / PDF）→ 将其放入 `~/knowledge-base/` 对应目录。
-告知用户资料已入库，下次查询即可命中。
+用户放入新资料 → 告知已入库，下次查询即可命中。
 
-## 使用方法
+## 知识库目录
 
-### 知识库位置
-默认知识库路径：`~/knowledge-base/`（可通过脚本参数覆盖）
-
-目录结构：
 ```
 knowledge-base/
-├── books/        # 电子书（PDF 等）
-├── notes/        # Markdown 笔记
-├── articles/     # 文章和资料
-└── index/        # RAG 索引缓存（自动生成）
+├── books/        ← PDF/MD 电子书
+├── notes/        ← Markdown 笔记
+├── articles/     ← 文章资料
+└── index/        ← 索引缓存（自动生成）
 ```
 
-### 检索命令
+## PDF 处理
+
+### 批量转换（推荐）
+PDF 先用转换脚本转为 .md，RAG 直接读取：
+
 ```bash
-node scripts/rag-query.mjs "你的查询内容" [--kb <知识库路径>] [--top-k <结果数>]
+# 转换 knowledge-base/books/ 下所有 PDF 为 .md
+node scripts/convert-pdfs.mjs
+
+# 指定目录
+node scripts/convert-pdfs.mjs --source D:\电子书 --dest knowledge-base\books
+
+# 强制重新转换
+node scripts/convert-pdfs.mjs --force
 ```
 
-### 添加知识
-将文件放入对应目录即可：
+转换后的 .md 文件保留原始文本结构，可手动编辑补充。
+
+### 直接查询
+如果 PDF 尚未转换，RAG 脚本会跳过它们。
+请先运行转换脚本，确保知识库完整索引。
+
+## 检索命令
 ```bash
-cp my-note.md ~/knowledge-base/notes/
-# 下次查询自动重建索引
+node scripts/rag-query.mjs "你的问题" [--kb <路径>] [--top-k <数量>]
 ```
 
 ## 配合其他技能
-当用户需要同时学习和审查时（如学习 Buck 变换器并审查相关代码）：
-1. 先用本 skill 检索知识库，提供理论背景
-2. 再切换到 code-review skill 审查实现代码
-3. 在审查报告中引用学习阶段的资料
+1. 先用本 skill 检索知识库获取理论背景
+2. 再切换 code-review skill 审查相关代码
+3. 审查报告中引用学习阶段的资料
