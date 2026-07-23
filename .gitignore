@@ -1,0 +1,6 @@
+﻿# 忽略原始 PDF
+*.pdf
+# node_modules
+node_modules/
+# 临时文件
+*.tmp
