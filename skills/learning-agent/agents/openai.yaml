@@ -1,0 +1,4 @@
+﻿# yaml-language-server: ...
+display_name: "学习 Agent"
+short_description: "基于 RAG 的知识问答、掌握度评估、资料管理。从知识库检索资料来回答问题"
+default_prompt: "帮我查一下知识库中关于 X 的资料"
